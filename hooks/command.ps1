@@ -4,10 +4,10 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 # NOTE(AOOSG): Useful for debugging
-Write-Host "Env variables:"
-Get-ChildItem -Path env: | ForEach-Object {
-	Write-Host "$($_.Name) = $($_.Value)"
-}
+#Write-Host "Env variables:"
+#Get-ChildItem -Path env: | ForEach-Object {
+#	Write-Host "$($_.Name) = $($_.Value)"
+#}
 
 
 function Invoke-OSGRunDocker {
