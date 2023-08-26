@@ -627,13 +627,15 @@ $ArgumentList += "$projectSlug.$($env:BUILDKITE_BUILD_NUMBER).$projectBranch-$($
 $shell = @()
 $shell_disabled = $true
 
+# We use an entrypoint file to run the command, so disable the shell.
 if ($env:BUILDKITE_COMMAND) {
 	if (($env:BUILDKITE_COMMAND -split '\r?\n').Count -gt 1) {
 		Write-Host "⚠️  Warning: The command received has multiple lines."
 		Write-Host "⚠️           The Docker Plugin may not correctly run multiple commands in the step-level configuration."
 		Write-Host "⚠️           You will need to use a single command, a script, or the plugin's command option."
 	}
-	$shell_disabled = $false
+	Write-Host "We use an entrypoint file to run the command, so disable the shell."
+	#$shell_disabled = $false
 }
 
 # Handle setting of shm size if provided
