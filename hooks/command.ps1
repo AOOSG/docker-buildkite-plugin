@@ -809,6 +809,7 @@ if ($env:BUILDKITE_COMMAND) {
 	if (Test-Is-Windows) {
 		# The windows CMD shell only supports multiple commands with &&.
 		$windows_multi_command = $env:BUILDKITE_COMMAND -replace '\r?\n', ' && '
+		$windows_multi_command = $windows_multi_command -replace '/', '\'
 		$ArgumentList += $windows_multi_command
 	} else {
 		$ArgumentList += $env:BUILDKITE_COMMAND
