@@ -682,9 +682,10 @@ if ($isolationMode) {
 $cpus_default = 1
 if (Test-Is-Windows) {
 	$cpuInfo = Get-WmiObject Win32_Processor
-	$cpus_default = $cpuInfo.NumberOfCores
+	$cpus_default = $cpuInfo.NumberOfLogicalProcessors
 }
-Write-Host "Number of host CPU Cores: $cpus_default"
+$cpus_default = [Math]::Min($cpus_default, 20)
+Write-Host "Number of host logical CPU Cores (capped at 20): $cpus_default"
 $cpus = (Get-EnvVariableWithDefault `
 	-envVariable $env:BUILDKITE_PLUGIN_DOCKER_CPUS `
 	-defaultValue $cpus_default)
