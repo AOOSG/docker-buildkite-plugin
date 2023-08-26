@@ -622,7 +622,7 @@ if ((Get-EnvVariableWithDefault `
 $ArgumentList += "--name"
 $projectSlug = ($env:BUILDKITE_PIPELINE_SLUG) -replace ' ', '-'
 $projectBranch = ($env:BUILDKITE_BRANCH) -replace '/', '-'
-$ArgumentList += "$projectSlug.$($env:BUILDKITE_BUILD_NUMBER).$projectBranch-$($BUILDKITE_AGENT_NAME)"
+$ArgumentList += "$projectSlug.$($env:BUILDKITE_BUILD_NUMBER).$projectBranch-$($env:BUILDKITE_AGENT_NAME)"
 
 $shell = @()
 $shell_disabled = $true
