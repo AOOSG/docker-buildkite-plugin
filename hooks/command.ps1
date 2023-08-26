@@ -642,6 +642,42 @@ if ($env:BUILDKITE_PLUGIN_DOCKER_SHM_SIZE) {
 	$ArgumentList += $env:BUILDKITE_PLUGIN_DOCKER_SHM_SIZE
 }
 
+$defaultIsolationMode = "hyperv"
+
+if (-not (Test-Is-Windows)) {
+	Write-Host "Forcing isolation mode to hyperv on non-windows host."
+	$defaultIsolationMode = "hyperv"
+}
+
+# Set the default isolation mode.
+# Note: We have to force 'hyperv' isolation mode on older windows builds, see
+# https://unrealcontainers.com/docs/concepts/windows-containers
+$osVersion = [System.Environment]::OSVersion.Version
+$buildVersion = $osVersion.Build
+Write-Host "Windows Build Version: $buildVersion"
+if ($buildVersion -lt 1809) {
+	Write-Host "Forcing isolation mode to 'hyperv' due to older windows build version $($buildVersion) < 1809."
+	$defaultIsolationMode = "hyperv"
+}
+
+# Allow us to use all threads on windows
+# Handle setting of cpus if provided
+# Isolation mode 'process' is recommended (see https://docs.docker.com/docker-for-windows/performance/#tips-for-improving-performance)
+$isolationMode = (Get-EnvVariableWithDefault `
+	-envVariable $env:OSG_ISOLATION_MODE `
+	-defaultValue $defaultIsolationMode)
+if ($isolationMode) {
+	if ($isolationMode -match "process") {
+		# This is required for hardware acceleration.
+		# UE5/Engine/Extras/Containers/Windows/Runtime/Dockerfile recommends
+		# we set the device.
+		$ArgumentList += "--device"
+		$ArgumentList += "class/5B45201D-F2F2-4F3B-85BB-30FF1F953599"
+	}
+	Write-Host "Setting isolation mode to $isolationMode"
+	$ArgumentList += "--isolation=$isolationMode"
+}
+
 # Handle setting of cpus if provided
 $cpus_default = 1
 if (Test-Is-Windows) {
@@ -657,14 +693,24 @@ if ($cpus) {
 }
 
 # Handle memory limit if provided
-# It seems a minimum of 24GB memory is required to use 16 threads.
+# It seems a minimum of 24GB memory is required to use 16 threads in 'hyperv' mode whilst we add a bit more in 'process'
+# mode to be safe as we also need to account for the memory used by the host OS and other processes.
 # UE5 allocates 1.5GB to each thread.
 $minimumMemoryGbs = [int](1.5 * $cpus)
 $memory = (Get-EnvVariableWithDefault `
 	-envVariable $env:BUILDKITE_PLUGIN_DOCKER_MEMORY `
-	-defaultValue "$($minimumMemoryGbs)g")
+	-defaultValue "$($minimumMemoryGbs)")
 if ($memory) {
-	$ArgumentList += "--memory=$($memory)"
+	# Seems process mode requries a bit more memory. Add a bit more memory to be safe as we also need to account for
+	# the memory used by the host OS and other processes.
+	if ($isolationMode -match "process") {
+		Write-Host "Adding 4GB memory in process isolation mode"
+		$memory = [int]($memory) + 4
+	} else {
+		Write-Host "Adding 2GB memory in hyperv isolation mode"
+		$memory = [int]($memory) + 2
+	}
+	$ArgumentList += "--memory=$($memory)g"
 }
 
 # Handle memory swap limit if provided
@@ -724,23 +770,6 @@ if ((Get-EnvVariableWithDefault `
 	$ArgumentList += "com.buildkite.agent_name=`"$($env:BUILDKITE_AGENT_NAME)`""
 	$ArgumentList += "--label"
 	$ArgumentList += "com.buildkite.agent_id=`"$($env:BUILDKITE_AGENT_ID)`""
-}
-
-# Allow us to use all threads on windows
-# Handle setting of cpus if provided
-$isolationMode = (Get-EnvVariableWithDefault `
-	-envVariable $env:OSG_ISOLATION_MODE `
-	-defaultValue "process")
-if ($isolationMode) {
-	if ($isolationMode -match "process") {
-		# This is required for hardware acceleration.
-		# UE5/Engine/Extras/Containers/Windows/Runtime/Dockerfile recommends
-		# we set the device.
-		$ArgumentList += "--device"
-		$ArgumentList += "class/5B45201D-F2F2-4F3B-85BB-30FF1F953599"
-	}
-	Write-Host "Setting isolation mode to $isolationMode"
-	$ArgumentList += "--isolation=$isolationMode"
 }
 
 # Add the image in before the shell and command
