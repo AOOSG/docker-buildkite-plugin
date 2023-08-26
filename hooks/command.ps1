@@ -650,10 +650,9 @@ if (-not (Test-Is-Windows)) {
 	Write-Host "Forcing isolation mode to hyperv on non-windows host."
 	$defaultIsolationMode = "hyperv"
 	# Hack - for cooking builds we use process by default to enable GPU acceleration
-	if ($env:BUILDKITE_AGENT_META_DATA_QUEUE -like "*cook*") {
-		Write-Host "Forcing isolation mode to process for cook builds."
-		$defaultIsolationMode = "process"
-	}
+} elseif ($env:BUILDKITE_AGENT_META_DATA_QUEUE -like "*cook*") {
+	Write-Host "Forcing isolation mode to process for cook builds."
+	$defaultIsolationMode = "process"
 }
 
 # Set the default isolation mode.
