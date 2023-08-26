@@ -684,7 +684,7 @@ if (Test-Is-Windows) {
 	$cpuInfo = Get-WmiObject Win32_Processor
 	$cpus_default = $cpuInfo.NumberOfLogicalProcessors
 }
-$cpu_cap = 20
+$cpu_cap = 16
 Write-Host "Number of host logical CPU Cores (capped at $cpu_cap): $cpus_default"
 $cpus_default = [Math]::Min($cpus_default, $cpu_cap)
 $cpus = (Get-EnvVariableWithDefault `
