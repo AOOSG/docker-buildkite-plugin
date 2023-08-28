@@ -615,7 +615,26 @@ if ((Get-EnvVariableWithDefault `
 	$longtailCachePath = (Resolve-Path -Path $longtailCachePath).Path
 	Write-Host "Using longtail cache path '$($longtailCachePath)'"
 	$ArgumentList += "--volume"
-	$ArgumentList += "$($longtailCachePath):C:\LongtailCache"
+	$ArgumentList += "`"$($longtailCachePath)`":C:\LongtailCache"
+}
+
+# Set up the an external DerivedDataCache folder so we can re-use shaders between runs.
+if ((Get-EnvVariableWithDefault `
+		-envVariable $env:OSG_DERIVED_DATA_CACHE_VOLUME `
+		-defaultValue "true") -match "^(true|on|1)$") {
+	$derivedDataCachePath = (Get-EnvVariableWithDefault `
+		-envVariable $env:OSG_LONGTAIL_CACHE_RELATIVE_PATH `
+		-defaultValue "..\..\DerivedDataCache")
+	$derivedDataCachePath = Join-Path -Path $pwd_default -ChildPath $derivedDataCachePath
+	# Create a derived data cache folder on the host if it does not exist.
+	if (-not (Test-Path -Path $derivedDataCachePath)) {
+		New-Item -Path $derivedDataCachePath -ItemType Directory -Force
+	}
+	$derivedDataCachePath = (Resolve-Path -Path $derivedDataCachePath).Path
+	Write-Host "Using derived data cache path '$($derivedDataCachePath)'"
+	$ArgumentList += "--volume"
+	# Note: If the user changes from ContainerAdministrator we need to update this path.
+	$ArgumentList += "`"$($derivedDataCachePath)`":`"C:\Users\ContainerAdministrator\AppData\Local\UnrealEngine\Common\DerivedDataCache`""
 }
 
 # Add a name to the container
