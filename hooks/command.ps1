@@ -732,7 +732,8 @@ if ($memory) {
 	# the memory used by the host OS and other processes.
 	if ($isolationMode -match "process") {
 		Write-Host "Adding 4GB memory in process isolation mode"
-		$memory = [int]($memory) + 4
+		# Cooking the island map requires + 6GB atm (30GB total for 16 threads)
+		$memory = [int]($memory) + 6
 	} else {
 		Write-Host "Adding 2GB memory in hyperv isolation mode"
 		$memory = [int]($memory) + 2
