@@ -733,7 +733,12 @@ if ($memory) {
 	if ($isolationMode -match "process") {
 		Write-Host "Adding 4GB memory in process isolation mode"
 		# Cooking the island map requires + 6GB atm (30GB total for 16 threads)
-		$memory = [int]($memory) + 6
+		# 2023-09-30: Got out of memory using 30GB, so bumping to 34GB (+10GB)
+		# c1xx: error C3859: Failed to create virtual memory for PCH
+		# c1xx: note: the system returned code 1455: The paging file is too small for this operation to complete.
+		# c1xx: note: please visit https://aka.ms/pch-help for more details
+		# c1xx: fatal error C1076: compiler limit: internal heap limit reached
+		$memory = [int]($memory) + 10
 	} else {
 		Write-Host "Adding 2GB memory in hyperv isolation mode"
 		$memory = [int]($memory) + 2
