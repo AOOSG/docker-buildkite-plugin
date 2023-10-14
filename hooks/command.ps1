@@ -44,20 +44,20 @@ function Invoke-OSGRunDocker {
 function Invoke-OSGRun {
 	param (
 		[Parameter(Mandatory = $true)]
-		[string]$command
+		[string]$Command
 	)
 
 	Write-Host "--- :computer: Running command"
-	Write-Host "Running: '$($command)'"
-	$process = Start-Process -FilePath $command -NoNewWindow -Wait -PassThru
+	Write-Host "Running: '$($Command)'"
+	$process = Start-Process -FilePath $Command -NoNewWindow -Wait -PassThru
 	if ($null -eq $process) {
-		throw "Unable to start process '$($executable)'..."
+		throw "Unable to start process '$($Command)'..."
 	}
 	$process.WaitForExit()
 
 	if ($process.ExitCode -ne 0)
 	{
-		Throw "$($executable) exited with code '$($process.ExitCode)'"
+		Throw "$($Command) exited with code '$($process.ExitCode)'"
 	}
 }
 
